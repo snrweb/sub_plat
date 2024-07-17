@@ -23,14 +23,6 @@ class NewPost extends Mailable
     ) {
     }
 
-    public function build()
-    {
-        return $this->view('emails.new_post')->with([
-            'title' => $this->post->title,
-            'description' => $this->post->description,
-        ]);
-    }
-
     /**
      * Get the message envelope.
      */
