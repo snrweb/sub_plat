@@ -1,0 +1,77 @@
+version: "3.6"
+services:
+
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./build/php.ini:/usr/local/etc/php/php.ini
+      - ./:/var/www/html
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    env_file:
+      - ./.env
+    working_dir: /var/www/html
+    links:
+      - db
+    networks:
+      - sub_plat_network
+    command: php artisan serve --host 0.0.0.0
+
+  # nginx:
+  #   image: nginx:1.15-alpine
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./nginx:/etc/nginx/conf.d
+  #   ports:
+  #     - "80:80"
+  #   depends_on:
+  #     - db
+  #     - php
+  #   networks:
+  #     - sub_plat_network
+
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: '${DB_DATABASE}'
+    ports:
+      - 3306:3306
+    volumes:
+      - ./build/mysql:/etc/mysql/conf.d
+      - sub-plat-data:/var/lib/mysql
+    networks:
+      - sub_plat_network
+
+  memcached:
+    image: 'bitnami/memcached:latest'
+    environment:
+      - MEMCACHED_USERNAME=root
+    networks:
+      - sub_plat_network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: unless-stopped
+    environment:
+      UPLOAD_LIMIT: 1500M
+      MAX_EXECUTION_TIME: 950000
+    ports:
+      - 8161:80
+    depends_on:
+      - db
+    networks:
+      - sub_plat_network
+
+volumes:
+  sub-plat-conf:
+  sub-plat-data:
+
+networks:
+  sub_plat_network:
+    driver: bridge
